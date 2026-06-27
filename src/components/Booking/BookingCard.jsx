@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Navigation, MapPin, ArrowLeftRight, Calendar, Briefcase, Grid2x2, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { searchStations } from "../../data/stations";
 
 const CLASSES = [
   { code: "ALL", label: "All Classes" },
@@ -22,7 +23,7 @@ const QUOTAS = [
 
 function today() {
   const d = new Date();
-  return d.toLocaleDateString("en-GB").split("/").join("/"); // DD/MM/YYYY
+  return d.toLocaleDateString("en-GB").split("/").join("/");
 }
 
 export default function BookingCard() {
@@ -37,6 +38,11 @@ export default function BookingCard() {
   const [pwd, setPwd] = useState(false);
   const [flexible, setFlexible] = useState(false);
   const [railwayPass, setRailwayPass] = useState(false);
+
+  const [fromSuggestions, setFromSuggestions] = useState([]);
+  const [toSuggestions, setToSuggestions] = useState([]);
+  const [showFromList, setShowFromList] = useState(false);
+  const [showToList, setShowToList] = useState(false);
 
   const swapStations = () => {
     setFrom(to);
@@ -61,7 +67,6 @@ export default function BookingCard() {
         viewport={{ once: true }}
         className="rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-[#0A1A4F]/10"
       >
-        {/* Top tabs */}
         <div className="grid grid-cols-2">
           <button className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 hover:bg-[#0d2266] transition-colors">
             <Briefcase size={16} /> PNR STATUS
@@ -71,25 +76,44 @@ export default function BookingCard() {
           </button>
         </div>
 
-        {/* Card body */}
         <div className="bg-white px-6 py-6">
           <h2 className="text-center text-2xl font-extrabold text-[#0A1A4F] tracking-wide mb-6">
             BOOK TICKET
           </h2>
 
           {/* From / To */}
-          <div className="flex gap-3 mb-4 relative">
-            <div className="flex-1">
+          <div className="flex gap-3 mb-4">
+            <div className="flex-1 relative">
               <label className="block text-xs font-semibold text-[#0A1A4F] mb-1">From</label>
               <div className="flex items-center gap-2 border-2 border-[#0A1A4F] rounded-lg px-3 py-2.5 focus-within:border-orange-500">
                 <Navigation size={16} className="text-[#0A1A4F] shrink-0" />
                 <input
                   value={from}
-                  onChange={(e) => setFrom(e.target.value)}
+                  onChange={(e) => {
+                    setFrom(e.target.value);
+                    setFromSuggestions(searchStations(e.target.value));
+                    setShowFromList(true);
+                  }}
+                  onFocus={() => setShowFromList(true)}
+                  onBlur={() => setTimeout(() => setShowFromList(false), 150)}
                   placeholder="Origin Station"
                   className="w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
                 />
               </div>
+
+              {showFromList && fromSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 max-h-56 overflow-auto">
+                  {fromSuggestions.map((s) => (
+                    <button
+                      key={s.code}
+                      onClick={() => { setFrom(`${s.name} (${s.code})`); setShowFromList(false); }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-orange-50 text-gray-700"
+                    >
+                      {s.name} <span className="text-gray-400 text-xs">({s.code})</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button
@@ -100,17 +124,37 @@ export default function BookingCard() {
               <ArrowLeftRight size={14} />
             </button>
 
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <label className="block text-xs font-semibold text-[#0A1A4F] mb-1 invisible md:visible">To</label>
               <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-orange-500">
                 <MapPin size={16} className="text-gray-400 shrink-0" />
                 <input
                   value={to}
-                  onChange={(e) => setTo(e.target.value)}
+                  onChange={(e) => {
+                    setTo(e.target.value);
+                    setToSuggestions(searchStations(e.target.value));
+                    setShowToList(true);
+                  }}
+                  onFocus={() => setShowToList(true)}
+                  onBlur={() => setTimeout(() => setShowToList(false), 150)}
                   placeholder="Destination Station"
                   className="w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
                 />
               </div>
+
+              {showToList && toSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 max-h-56 overflow-auto">
+                  {toSuggestions.map((s) => (
+                    <button
+                      key={s.code}
+                      onClick={() => { setTo(`${s.name} (${s.code})`); setShowToList(false); }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-orange-50 text-gray-700"
+                    >
+                      {s.name} <span className="text-gray-400 text-xs">({s.code})</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -206,7 +250,6 @@ export default function BookingCard() {
             </label>
           </div>
 
-          {/* Search button */}
           <button
             onClick={handleSearch}
             className="w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.99] transition-all text-white font-bold text-sm py-3.5 rounded-full shadow-lg shadow-orange-500/30"
