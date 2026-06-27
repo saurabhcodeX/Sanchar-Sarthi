@@ -1,18 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Users, ChevronDown } from "lucide-react";
-import StationInput from "./StationInput";
-import SwapButton from "./SwapButton";
-import JourneyDate from "./JourneyDate";
-
-const POPULAR_ROUTES = [
-  { from: "New Delhi (NDLS)", to: "Chandigarh (CDG)" },
-  { from: "New Delhi (NDLS)", to: "Mumbai Central (BCT)" },
-  { from: "Lucknow (LKO)", to: "New Delhi (NDLS)" },
-  { from: "Chennai Central (MAS)", to: "Bangalore City (SBC)" },
-];
+import { Navigation, MapPin, ArrowLeftRight, Calendar, Briefcase, Grid2x2, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CLASSES = [
+  { code: "ALL", label: "All Classes" },
   { code: "SL", label: "Sleeper" },
   { code: "3A", label: "3 Tier AC" },
   { code: "2A", label: "2 Tier AC" },
@@ -21,179 +13,206 @@ const CLASSES = [
   { code: "EC", label: "Exec. Chair" },
 ];
 
+const QUOTAS = [
+  { code: "GENERAL", label: "GENERAL" },
+  { code: "LADIES", label: "LADIES" },
+  { code: "TATKAL", label: "TATKAL" },
+  { code: "PREMIUM_TATKAL", label: "PREMIUM TATKAL" },
+];
+
+function today() {
+  const d = new Date();
+  return d.toLocaleDateString("en-GB").split("/").join("/"); // DD/MM/YYYY
+}
+
 export default function BookingCard() {
+  const navigate = useNavigate();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [date, setDate] = useState("");
-  const [passengers, setPassengers] = useState(1);
-  const [travelClass, setTravelClass] = useState("3A");
+  const [date, setDate] = useState(today());
+  const [travelClass, setTravelClass] = useState("ALL");
+  const [quota, setQuota] = useState("GENERAL");
   const [showClassMenu, setShowClassMenu] = useState(false);
+  const [showQuotaMenu, setShowQuotaMenu] = useState(false);
+  const [pwd, setPwd] = useState(false);
+  const [flexible, setFlexible] = useState(false);
+  const [railwayPass, setRailwayPass] = useState(false);
 
   const swapStations = () => {
     setFrom(to);
     setTo(from);
   };
 
-  const handlePopularRoute = (route) => {
-    setFrom(route.from);
-    setTo(route.to);
-  };
-
   const handleSearch = () => {
-    if (!from || !to || !date) {
-      alert("Please fill in origin, destination, and date.");
+    if (!from || !to) {
+      alert("Please fill in origin and destination.");
       return;
     }
-    console.log({ from, to, date, passengers, travelClass });
+    const params = new URLSearchParams({ from, to, date, class: travelClass, quota });
+    navigate(`/results?${params.toString()}`);
   };
 
   return (
-    <section className="relative -mt-16 z-20 px-4 md:px-8">
+    <section className="relative -mt-16 z-20 px-4 md:px-0 max-w-2xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         viewport={{ once: true }}
-        className="max-w-6xl mx-auto"
+        className="rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-[#0A1A4F]/10"
       >
-        {/* Title */}
-        <div className="text-center mb-5">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow">
-            Book Train Tickets
-          </h2>
-          <p className="text-blue-200 text-sm mt-1">
-            Search trains &bull; Compare fares &bull; Reserve seats instantly
-          </p>
+        {/* Top tabs */}
+        <div className="grid grid-cols-2">
+          <button className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 hover:bg-[#0d2266] transition-colors">
+            <Briefcase size={16} /> PNR STATUS
+          </button>
+          <button className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 border-l border-white/10 hover:bg-[#0d2266] transition-colors">
+            <Grid2x2 size={16} /> CHARTS / VACANCY
+          </button>
         </div>
 
-        {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-visible">
+        {/* Card body */}
+        <div className="bg-white px-6 py-6">
+          <h2 className="text-center text-2xl font-extrabold text-[#0A1A4F] tracking-wide mb-6">
+            BOOK TICKET
+          </h2>
 
-          {/* Search Row */}
-          <div className="flex flex-col md:flex-row items-stretch divide-y md:divide-y-0 md:divide-x divide-gray-100">
-
-            {/* FROM */}
-            <div className="flex-1 min-w-0">
-              <StationInput
-                label="From"
-                value={from}
-                placeholder="Origin Station"
-                onChange={setFrom}
-              />
-            </div>
-
-            {/* SWAP */}
-            <div className="hidden md:flex items-center justify-center px-0 relative z-10">
-              <div className="absolute">
-                <SwapButton onClick={swapStations} />
+          {/* From / To */}
+          <div className="flex gap-3 mb-4 relative">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-[#0A1A4F] mb-1">From</label>
+              <div className="flex items-center gap-2 border-2 border-[#0A1A4F] rounded-lg px-3 py-2.5 focus-within:border-orange-500">
+                <Navigation size={16} className="text-[#0A1A4F] shrink-0" />
+                <input
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  placeholder="Origin Station"
+                  className="w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
+                />
               </div>
             </div>
 
-            {/* TO */}
-            <div className="flex-1 min-w-0">
-              <StationInput
-                label="To"
-                value={to}
-                placeholder="Destination Station"
-                onChange={setTo}
-              />
+            <button
+              onClick={swapStations}
+              aria-label="Swap stations"
+              className="self-end mb-2.5 w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-[#0A1A4F] transition-colors shrink-0"
+            >
+              <ArrowLeftRight size={14} />
+            </button>
+
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-[#0A1A4F] mb-1 invisible md:visible">To</label>
+              <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-orange-500">
+                <MapPin size={16} className="text-gray-400 shrink-0" />
+                <input
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  placeholder="Destination Station"
+                  className="w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Date / Class */}
+          <div className="flex gap-3 mb-4">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-[#0A1A4F] mb-1">DD/MM/YYYY *</label>
+              <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-orange-500">
+                <Calendar size={15} className="text-gray-400 shrink-0" />
+                <input
+                  type="text"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full outline-none text-sm text-gray-800"
+                />
+              </div>
             </div>
 
-            {/* DATE */}
-            <div className="w-full md:w-48 shrink-0">
-              <JourneyDate value={date} onChange={setDate} />
-            </div>
-
-            {/* PASSENGERS + CLASS combined */}
-            <div className="w-full md:w-44 shrink-0 relative">
+            <div className="flex-1 relative">
+              <label className="block text-xs font-semibold text-transparent mb-1">Class</label>
               <button
-                onClick={() => setShowClassMenu(!showClassMenu)}
-                className="w-full h-full px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                onClick={() => { setShowClassMenu(v => !v); setShowQuotaMenu(false); }}
+                className="w-full flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 hover:border-orange-400 transition-colors"
               >
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1">
-                  Passengers & Class
-                </p>
-                <div className="flex items-center gap-2">
-                  <Users size={15} className="text-orange-500" />
-                  <span className="font-bold text-gray-800 text-sm">
-                    {passengers} Adult
-                  </span>
-                  <span className="ml-auto text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
-                    {travelClass}
-                  </span>
-                  <ChevronDown size={14} className={`text-gray-400 transition-transform ${showClassMenu ? "rotate-180" : ""}`} />
-                </div>
+                <Briefcase size={15} className="text-gray-400 shrink-0" />
+                <span className="text-sm text-gray-800 flex-1 text-left">
+                  {CLASSES.find(c => c.code === travelClass)?.label}
+                </span>
+                <ChevronDown size={14} className={`text-gray-400 transition-transform ${showClassMenu ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Dropdown */}
               {showClassMenu && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 z-50 p-4">
-                  {/* Passenger count */}
-                  <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Passengers</p>
-                  <div className="flex items-center gap-3 mb-4">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 max-h-56 overflow-auto">
+                  {CLASSES.map(c => (
                     <button
-                      onClick={() => passengers > 1 && setPassengers(p => p - 1)}
-                      className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-orange-100 flex items-center justify-center font-bold text-gray-600 disabled:opacity-30"
-                      disabled={passengers <= 1}
-                    >−</button>
-                    <span className="font-bold text-lg text-gray-900 w-6 text-center">{passengers}</span>
-                    <button
-                      onClick={() => passengers < 6 && setPassengers(p => p + 1)}
-                      className="w-8 h-8 rounded-lg bg-orange-500 hover:bg-orange-600 flex items-center justify-center font-bold text-white disabled:opacity-30"
-                      disabled={passengers >= 6}
-                    >+</button>
-                    <span className="text-xs text-gray-400">Max 6</span>
-                  </div>
-
-                  {/* Class pills */}
-                  <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Travel Class</p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {CLASSES.map(cls => (
-                      <button
-                        key={cls.code}
-                        onClick={() => { setTravelClass(cls.code); setShowClassMenu(false); }}
-                        className={`py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          travelClass === cls.code
-                            ? "bg-orange-500 text-white"
-                            : "bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600"
-                        }`}
-                      >
-                        {cls.code}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2 text-center">
-                    {CLASSES.find(c => c.code === travelClass)?.label}
-                  </p>
+                      key={c.code}
+                      onClick={() => { setTravelClass(c.code); setShowClassMenu(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-orange-50 ${travelClass === c.code ? "text-orange-600 font-semibold" : "text-gray-700"}`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
+          </div>
 
-            {/* SEARCH BUTTON */}
+          {/* Quota */}
+          <div className="relative mb-5">
             <button
-              onClick={handleSearch}
-              className="bg-orange-500 hover:bg-orange-600 active:scale-95 transition-all text-white font-bold tracking-widest text-sm flex flex-col items-center justify-center gap-1.5 px-8 py-5 md:rounded-r-2xl"
+              onClick={() => { setShowQuotaMenu(v => !v); setShowClassMenu(false); }}
+              className="w-full flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 hover:border-orange-400 transition-colors"
             >
-              <Search size={20} strokeWidth={2.5} />
-              SEARCH
+              <Grid2x2 size={15} className="text-gray-400 shrink-0" />
+              <span className="text-sm font-semibold text-[#0A1A4F] flex-1 text-left">
+                {QUOTAS.find(q => q.code === quota)?.label}
+              </span>
+              <ChevronDown size={14} className={`text-gray-400 transition-transform ${showQuotaMenu ? "rotate-180" : ""}`} />
             </button>
+
+            {showQuotaMenu && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1">
+                {QUOTAS.map(q => (
+                  <button
+                    key={q.code}
+                    onClick={() => { setQuota(q.code); setShowQuotaMenu(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-orange-50 ${quota === q.code ? "text-orange-600 font-semibold" : "text-gray-700"}`}
+                  >
+                    {q.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Popular Routes */}
-          <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/60 rounded-b-2xl flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              Popular
-            </span>
-            {POPULAR_ROUTES.map(route => (
-              <button
-                key={`${route.from}-${route.to}`}
-                onClick={() => handlePopularRoute(route)}
-                className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-all"
-              >
-                {route.from.split("(")[0].trim()} → {route.to.split("(")[0].trim()}
-              </button>
-            ))}
+          {/* Checkboxes */}
+          <div className="grid grid-cols-2 gap-y-2 gap-x-4 mb-6">
+            <label className="flex items-center gap-2 text-sm font-semibold text-[#0A1A4F] cursor-pointer">
+              <input type="checkbox" checked={pwd} onChange={(e) => setPwd(e.target.checked)}
+                className="w-4 h-4 accent-[#0A1A4F] rounded" />
+              Person With Disability Concession
+            </label>
+            <label className="flex items-center gap-2 text-sm font-semibold text-[#0A1A4F] cursor-pointer">
+              <input type="checkbox" checked={flexible} onChange={(e) => setFlexible(e.target.checked)}
+                className="w-4 h-4 accent-[#0A1A4F] rounded" />
+              Flexible With Date
+            </label>
+            <label className="flex items-center gap-2 text-sm font-semibold text-[#0A1A4F] cursor-pointer">
+              <input type="checkbox" checked={railwayPass} onChange={(e) => setRailwayPass(e.target.checked)}
+                className="w-4 h-4 accent-[#0A1A4F] rounded" />
+              Railway Pass Concession
+            </label>
           </div>
+
+          {/* Search button */}
+          <button
+            onClick={handleSearch}
+            className="w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.99] transition-all text-white font-bold text-sm py-3.5 rounded-full shadow-lg shadow-orange-500/30"
+          >
+            Search Trains
+          </button>
         </div>
       </motion.div>
     </section>
