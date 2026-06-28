@@ -22,12 +22,12 @@ const QUOTAS = [
 ];
 
 function todayISO() {
-  return new Date().toISOString().split("T")[0]; // YYYY-MM-DD, required by <input type="date">
+  return new Date().toISOString().split("T")[0];
 }
 
 function formatDisplayDate(isoStr) {
   const [y, m, d] = isoStr.split("-");
-  return `${d}/${m}/${y}`; // DD/MM/YYYY for Results page
+  return `${d}/${m}/${y}`;
 }
 
 export default function BookingCard() {
@@ -81,7 +81,7 @@ export default function BookingCard() {
           <button onClick={() => navigate("/pnr-status")} className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 hover:bg-[#0d2266] transition-colors">
             <Briefcase size={16} /> PNR STATUS
           </button>
-          <button className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 border-l border-white/10 hover:bg-[#0d2266] transition-colors">
+          <button onClick={() => navigate("/live-status")} className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 border-l border-white/10 hover:bg-[#0d2266] transition-colors">
             <Grid2x2 size={16} /> CHARTS / VACANCY
           </button>
         </div>
