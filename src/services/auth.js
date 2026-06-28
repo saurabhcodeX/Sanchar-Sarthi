@@ -1,68 +1,46 @@
-import { api } from "./api";
-
-// Store user session in localStorage
-const TOKEN_KEY = "ss_token";
-const USER_KEY  = "ss_user";
+const AUTH_KEY = "sanchar_sarthi_auth";
 
 export const auth = {
-  // ── Login ──────────────────────────────────────────────────────────────────
-  async login({ userId, password }) {
-    // When backend is ready, replace mock with:
-    // const data = await api.post("/auth/login", { userId, password });
-
-    // ── MOCK (remove once backend is live) ────────────────────────────────
-    await new Promise((r) => setTimeout(r, 1000)); // simulate network
-    if (password === "wrong") throw new Error("Invalid credentials. Please try again.");
-    const data = {
-      token: "mock_jwt_token_" + Date.now(),
-      user: { id: 1, name: "Traveller", mobile: userId, email: "" },
-    };
-    // ─────────────────────────────────────────────────────────────────────
-
-    localStorage.setItem(TOKEN_KEY, data.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    return data.user;
-  },
-
-  // ── Register ───────────────────────────────────────────────────────────────
-  async register({ name, mobile, email, dob, password }) {
-    // When backend is ready, replace mock with:
-    // const data = await api.post("/auth/register", { name, mobile, email, dob, password });
-
-    // ── MOCK ──────────────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 1200));
-    if (mobile === "0000000000") throw new Error("This mobile number is already registered.");
-    const data = {
-      token: "mock_jwt_token_" + Date.now(),
-      user: { id: 2, name, mobile, email },
-    };
-    // ─────────────────────────────────────────────────────────────────────
-
-    localStorage.setItem(TOKEN_KEY, data.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-    return data.user;
-  },
-
-  // ── Logout ─────────────────────────────────────────────────────────────────
-  logout() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-  },
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  getToken() {
-    return localStorage.getItem(TOKEN_KEY);
+  isLoggedIn() {
+    return !!localStorage.getItem(AUTH_KEY);
   },
 
   getUser() {
-    try {
-      return JSON.parse(localStorage.getItem(USER_KEY));
-    } catch {
-      return null;
-    }
+    const raw = localStorage.getItem(AUTH_KEY);
+    return raw ? JSON.parse(raw) : null;
   },
 
-  isLoggedIn() {
-    return !!localStorage.getItem(TOKEN_KEY);
+  async login({ userId, password }) {
+    await new Promise((r) => setTimeout(r, 600)); // simulate network
+    // TODO: replace with -> const { data } = await api.post('/auth/login', { userId, password });
+
+    if (!userId || !password) {
+      throw new Error("User ID and password are required.");
+    }
+
+    // Mock: any non-empty credentials succeed
+    const user = {
+      userId,
+      name: userId.includes("@") ? userId.split("@")[0] : "Traveller",
+    };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    return user;
+  },
+
+  async register({ name, mobile, email, dob, password }) {
+    await new Promise((r) => setTimeout(r, 600));
+    // TODO: replace with -> const { data } = await api.post('/auth/register', { name, mobile, email, dob, password });
+
+    if (!name || !mobile || !email || !dob || !password) {
+      throw new Error("All fields are required.");
+    }
+
+    const user = { name, mobile, email, dob };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    return user;
+  },
+
+  logout() {
+    localStorage.removeItem(AUTH_KEY);
   },
 };

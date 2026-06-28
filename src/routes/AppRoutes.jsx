@@ -61,7 +61,7 @@ export default function AppRoutes() {
       <Route path="/payment" element={
         <ProtectedRoute><MainLayout><Payment /></MainLayout></ProtectedRoute>
       } />
-      <Route path="/ticket/:id" element={
+      <Route path="/ticket" element={
         <ProtectedRoute><MainLayout><Ticket /></MainLayout></ProtectedRoute>
       } />
       <Route path="/profile" element={
