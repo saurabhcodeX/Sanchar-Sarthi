@@ -78,7 +78,7 @@ export default function BookingCard() {
         className="rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-[#0A1A4F]/10"
       >
         <div className="grid grid-cols-2">
-          <button className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 hover:bg-[#0d2266] transition-colors">
+          <button onClick={() => navigate("/pnr-status")} className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 hover:bg-[#0d2266] transition-colors">
             <Briefcase size={16} /> PNR STATUS
           </button>
           <button className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 border-l border-white/10 hover:bg-[#0d2266] transition-colors">

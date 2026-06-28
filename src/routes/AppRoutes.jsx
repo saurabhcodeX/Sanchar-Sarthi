@@ -15,6 +15,7 @@ import Notifications    from "../pages/Notifications";
 import TrainDetails     from "../pages/TrainDetails";
 import Contact          from "../pages/Contact";
 import Support          from "../pages/Support";
+import PNRStatus        from "../pages/PNRStatus";
 import NotFound         from "../pages/NotFound";
 
 function ProtectedRoute({ children }) {
@@ -45,6 +46,9 @@ export default function AppRoutes() {
       } />
       <Route path="/support" element={
         <MainLayout><Support /></MainLayout>
+      } />
+      <Route path="/pnr-status" element={
+        <MainLayout><PNRStatus /></MainLayout>
       } />
 
       {/* Protected pages with Navbar + Footer */}
