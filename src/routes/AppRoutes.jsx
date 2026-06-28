@@ -1,5 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { auth } from "../services/auth";
+import LiveStatus from "../pages/LiveStatus";
+// ...
+<Route path="/live-status" element={
+  <MainLayout><LiveStatus /></MainLayout>
+} />
 
 import MainLayout       from "../layouts/MainLayout";
 import Home             from "../pages/Home";
