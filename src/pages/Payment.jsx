@@ -1,7 +1,10 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { CreditCard, Smartphone, Building2, Wallet, ChevronLeft, ShieldCheck, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { CreditCard, Smartphone, Building2, Wallet, ChevronLeft, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getBookingById, confirmPayment } from "../services/bookingService";
+import { getTrainById } from "../services/trainService";
+import Loader from "../components/Common/Loader";
 
 const METHODS = [
   { id: "upi",  label: "UPI",          icon: Smartphone,  desc: "PhonePe, GPay, Paytm, BHIM" },
@@ -15,7 +18,16 @@ const BANKS = ["SBI","HDFC","ICICI","Axis","Kotak","PNB","BOB","IDBI"];
 export default function Payment() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { train, selectedClass, passengers = [], contact = {} } = location.state || {};
+  const [searchParams] = useSearchParams();
+  const bookingId = searchParams.get("bookingId");
+
+  // Data: prefer location.state (fast path), fallback to bookingService (refresh-safe path)
+  const [train, setTrain]               = useState(location.state?.train || null);
+  const [selectedClass, setSelectedClass] = useState(location.state?.selectedClass || null);
+  const [passengers, setPassengers]       = useState(location.state?.passengers || []);
+  const [contact, setContact]             = useState(location.state?.contact || {});
+  const [fetching, setFetching]           = useState(!location.state);
+  const [fetchError, setFetchError]       = useState(null);
 
   const [method, setMethod]   = useState("upi");
   const [upiId, setUpiId]     = useState("");
@@ -24,7 +36,24 @@ export default function Payment() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
-  const price = train?.price?.[selectedClass] || 945;
+  useEffect(() => {
+    if (location.state || !bookingId) {
+      setFetching(false);
+      return;
+    }
+    getBookingById(bookingId)
+      .then(async (booking) => {
+        setSelectedClass(booking.travelClass);
+        setPassengers(booking.passengers);
+        setContact(booking.contact);
+        const t = await getTrainById(booking.trainId);
+        setTrain(t);
+      })
+      .catch((err) => setFetchError(err.message || "Booking not found."))
+      .finally(() => setFetching(false));
+  }, [bookingId, location.state]);
+
+  const price = train?.price?.[selectedClass] || 0;
   const base  = price * (passengers.length || 1);
   const convenience = 35;
   const gst   = Math.round(base * 0.05);
@@ -42,13 +71,40 @@ export default function Payment() {
   }
 
   async function handlePay() {
+    if (!bookingId) { setError("Missing booking reference."); return; }
     const err = validate();
     if (err) { setError(err); return; }
     setError("");
     setLoading(true);
-    await new Promise(r => setTimeout(r, 2000));
-    setLoading(false);
-    navigate("/ticket/BK" + Date.now(), { state: { train, selectedClass, passengers, contact, total } });
+
+    await new Promise(r => setTimeout(r, 2000)); // fake gateway delay
+
+    try {
+      await confirmPayment(bookingId, method);
+      navigate(`/ticket?bookingId=${bookingId}`, {
+        state: { train, selectedClass, passengers, contact, total },
+      });
+    } catch (e) {
+      setError(e.message || "Payment failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (fetching) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="text-center py-16 text-red-500" role="alert">
+        {fetchError}
+      </div>
+    );
   }
 
   return (
@@ -66,7 +122,6 @@ export default function Payment() {
       <div className="max-w-3xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left — payment methods */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Progress */}
           <div className="flex items-center gap-2 text-xs font-semibold mb-2">
             {["Passengers","Payment","Confirmation"].map((s,i) => (
               <div key={s} className="flex items-center gap-2">
@@ -79,7 +134,6 @@ export default function Payment() {
             ))}
           </div>
 
-          {/* Method selector */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <p className="px-5 py-4 font-bold text-gray-800 border-b border-gray-100 text-sm">Choose Payment Method</p>
             {METHODS.map(m => (
@@ -99,7 +153,6 @@ export default function Payment() {
             ))}
           </div>
 
-          {/* Input area */}
           <AnimatePresence mode="wait">
             <motion.div key={method} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0}} transition={{duration:0.2}}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">

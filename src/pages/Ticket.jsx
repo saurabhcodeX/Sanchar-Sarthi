@@ -1,117 +1,139 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { Train, Download, Share2, CheckCircle2, MapPin, Clock, Users, IndianRupee, Home } from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { CheckCircle2, Download, Home, Train } from "lucide-react";
+import { useBooking } from "../hooks/useBooking";
+import { getTrainById } from "../services/trainService";
+import Loader from "../components/Common/Loader";
 
 export default function Ticket() {
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { train, selectedClass, passengers = [{ name:"Traveller", age:25, gender:"Male", berth:"Lower" }], contact = {}, total = 980 } = location.state || {};
+  const bookingId = searchParams.get("bookingId");
 
-  const pnr = "PNR" + Math.floor(Math.random() * 9000000000 + 1000000000);
-  const bookingId = "BK" + Date.now();
+  const { fetchBooking, loading, error, booking } = useBooking();
+  const [train, setTrain] = useState(null);
+
+  useEffect(() => {
+    if (!bookingId) return;
+    fetchBooking(bookingId).catch(() => {});
+  }, [bookingId, fetchBooking]);
+
+  useEffect(() => {
+    if (booking?.trainId) {
+      getTrainById(booking.trainId).then(setTrain).catch(() => {});
+    }
+  }, [booking]);
+
+  if (!bookingId) {
+    return <div className="text-center py-16 text-red-500" role="alert">No booking found.</div>;
+  }
+
+  if (loading && !booking) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center py-16 text-red-500" role="alert">{error}</div>;
+  }
+
+  if (booking?.status !== "CONFIRMED") {
+    return (
+      <div className="text-center py-16 text-gray-500" role="alert">
+        This booking has not been paid for yet.
+        <div className="mt-4">
+          <Link to={`/payment?bookingId=${bookingId}`} className="text-orange-600 font-semibold hover:underline">
+            Go to Payment →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg">
-        {/* Success banner */}
-        <motion.div initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }}
-          className="text-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
-            <CheckCircle2 size={36} className="text-green-500"/>
-          </div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Booking Confirmed!</h1>
-          <p className="text-gray-400 text-sm mt-1">Your ticket has been booked successfully.</p>
-        </motion.div>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* Success banner */}
+      <div className="flex flex-col items-center text-center mb-6">
+        <CheckCircle2 size={48} className="text-green-500 mb-2" />
+        <h1 className="text-xl font-bold text-gray-900">Booking Confirmed!</h1>
+        <p className="text-gray-500 text-sm mt-1">Your e-ticket is ready. Have a safe journey.</p>
+      </div>
 
-        {/* Ticket card */}
-        <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-          className="bg-white rounded-3xl shadow-xl overflow-hidden">
-          {/* Top */}
-          <div className="bg-[#0A1628] px-6 py-5 text-white">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <Train size={18} className="text-orange-400"/>
-                <span className="font-bold">{train?.name || "Vande Bharat Express"}</span>
-              </div>
-              <span className="text-[10px] font-mono bg-white/10 px-2 py-1 rounded-full">#{train?.number || "22436"}</span>
+      {/* Ticket card */}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+        <div className="bg-[#0A1628] text-white px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Train size={18} className="text-orange-400" />
+            <div>
+              <p className="font-bold text-sm">{train?.name}</p>
+              <p className="text-blue-300 text-xs">#{train?.number}</p>
             </div>
-            <p className="text-blue-300 text-xs">PNR: <span className="font-bold text-white font-mono">{pnr}</span></p>
           </div>
+          <div className="text-right">
+            <p className="text-xs text-blue-300">PNR</p>
+            <p className="font-mono font-bold">{booking?.pnr}</p>
+          </div>
+        </div>
 
-          {/* Route */}
-          <div className="px-6 py-5 border-b border-dashed border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-extrabold text-gray-900">{train?.dep || "06:00"}</p>
-                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><MapPin size={10}/>New Delhi</p>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <p className="text-[10px] text-gray-400 flex items-center gap-1"><Clock size={9}/>{train?.duration || "3h 30m"}</p>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full border-2 border-orange-400"/>
-                  <div className="w-16 h-px bg-orange-300"/>
-                  <Train size={12} className="text-orange-500"/>
-                  <div className="w-16 h-px bg-orange-300"/>
-                  <div className="w-2 h-2 rounded-full bg-orange-400"/>
-                </div>
-                <p className="text-[10px] text-orange-500 font-semibold">{selectedClass || "3A"}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-extrabold text-gray-900">{train?.arr || "09:30"}</p>
-                <p className="text-xs text-gray-400 flex items-center gap-1 justify-end mt-0.5"><MapPin size={10}/>Chandigarh</p>
-              </div>
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-lg font-extrabold text-gray-900">{train?.dep}</p>
+              <p className="text-xs text-gray-400">From</p>
+            </div>
+            <div className="flex-1 mx-3 border-t border-dashed border-gray-300" />
+            <div className="text-right">
+              <p className="text-lg font-extrabold text-gray-900">{train?.arr}</p>
+              <p className="text-xs text-gray-400">To</p>
             </div>
           </div>
 
-          {/* Passengers */}
-          <div className="px-6 py-4 border-b border-dashed border-gray-200">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5"><Users size={12}/>Passengers</p>
+          <div className="grid grid-cols-3 gap-3 text-sm mb-4">
+            <div>
+              <p className="text-gray-400 text-xs">Class</p>
+              <p className="font-semibold text-gray-800">{booking?.travelClass}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-xs">Quota</p>
+              <p className="font-semibold text-gray-800">{booking?.quota}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-xs">Status</p>
+              <p className="font-semibold text-green-600">{booking?.status}</p>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Passengers</p>
             <div className="space-y-2">
-              {passengers.map((p, i) => (
-                <div key={i} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-                  <div>
-                    <p className="font-bold text-gray-800 text-sm">{p.name}</p>
-                    <p className="text-xs text-gray-400">{p.age} yrs · {p.gender}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-orange-500">{p.berth || "No Preference"}</p>
-                    <p className="text-xs text-gray-400">Berth</p>
-                  </div>
+              {booking?.passengers?.map((p, i) => (
+                <div key={i} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                  <span className="font-medium text-gray-800">{p.name}</span>
+                  <span className="text-gray-500">{p.age} yrs • {p.gender} • Berth: {p.berth}</span>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Fare */}
-          <div className="px-6 py-4 border-b border-dashed border-gray-200">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5"><IndianRupee size={12}/>Total Paid</p>
-              <p className="text-xl font-extrabold text-green-600">₹{total.toLocaleString()}</p>
-            </div>
-            <p className="text-xs text-green-500 mt-1 text-right">Payment Successful ✓</p>
-          </div>
-
-          {/* Booking ID */}
-          <div className="px-6 py-4 bg-gray-50">
-            <p className="text-xs text-gray-400">Booking ID</p>
-            <p className="font-bold text-gray-700 font-mono text-sm">{bookingId}</p>
-          </div>
-        </motion.div>
-
-        {/* Actions */}
-        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.3 }}
-          className="flex gap-3 mt-5">
-          <button className="flex-1 flex items-center justify-center gap-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-xl text-sm transition-all">
-            <Download size={15}/> Download
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-xl text-sm transition-all">
-            <Share2 size={15}/> Share
-          </button>
-          <button onClick={() => navigate("/")}
-            className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl text-sm transition-all active:scale-95">
-            <Home size={15}/> Home
-          </button>
-        </motion.div>
+      {/* Actions */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => window.print()}
+          className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-full transition-all"
+        >
+          <Download size={16} /> Download / Print
+        </button>
+        <button
+          onClick={() => navigate("/")}
+          className="flex-1 flex items-center justify-center gap-2 border border-gray-300 text-gray-700 font-bold py-3 rounded-full hover:bg-gray-50 transition-all"
+        >
+          <Home size={16} /> Back to Home
+        </button>
       </div>
     </div>
   );

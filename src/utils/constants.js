@@ -17,3 +17,10 @@ export const BERTH_PREFERENCES = [
 
 export const MIN_PASSENGER_AGE = 1;
 export const MAX_PASSENGER_AGE = 120;
+
+export const PAYMENT_METHODS = [
+  { code: "UPI", label: "UPI" },
+  { code: "CARD", label: "Credit / Debit Card" },
+  { code: "NETBANKING", label: "Net Banking" },
+  { code: "WALLET", label: "Wallet" },
+];

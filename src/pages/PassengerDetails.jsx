@@ -81,20 +81,22 @@ export default function PassengerDetails() {
   }
 
   async function handleContinue() {
-    if (!validate()) return;
-    try {
-      const result = await submitBooking({
-        trainId,
-        travelClass: cls,
-        quota,
-        passengers,
-        contact,
-      });
-      navigate(`/payment?bookingId=${result.bookingId}`);
-    } catch {
-      // submitError already set by useBooking
-    }
+  if (!validate()) return;
+  try {
+    const result = await submitBooking({
+      trainId,
+      travelClass: cls,
+      quota,
+      passengers,
+      contact,
+    });
+    navigate(`/payment?bookingId=${result.bookingId}`, {
+      state: { train, selectedClass: cls, passengers, contact },
+    });
+  } catch {
+    // submitError already set by useBooking
   }
+}
 
   if (loadingTrain) {
     return (

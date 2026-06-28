@@ -1,22 +1,16 @@
-/**
- * Creates a booking with passenger details.
- * Currently mocked. Replace internals with a real API call once
- * Spring Boot backend is live — signature stays the same.
- */
-export async function createBooking({ trainId, travelClass, quota, passengers, contact }) {
-  await new Promise((r) => setTimeout(r, 700)); // simulate network
+const bookingsStore = new Map(); // in-memory mock store, replaced by real DB later
 
-  // TODO: replace with -> const { data } = await api.post('/bookings', { trainId, travelClass, quota, passengers, contact });
+export async function createBooking({ trainId, travelClass, quota, passengers, contact }) {
+  await new Promise((r) => setTimeout(r, 700));
 
   if (!passengers || passengers.length === 0) {
     throw new Error("At least one passenger is required.");
   }
 
-  // Mock response shape mirrors what a real backend would likely return
-  return {
+  const booking = {
     bookingId: `SS${Date.now()}`,
     pnr: Math.floor(1000000000 + Math.random() * 8999999999).toString(),
-    status: "CONFIRMED",
+    status: "PENDING_PAYMENT",
     trainId,
     travelClass,
     quota,
@@ -24,4 +18,29 @@ export async function createBooking({ trainId, travelClass, quota, passengers, c
     contact,
     createdAt: new Date().toISOString(),
   };
+
+  // TODO: replace with -> const { data } = await api.post('/bookings', {...}); return data;
+  bookingsStore.set(booking.bookingId, booking);
+  return booking;
+}
+
+export async function getBookingById(bookingId) {
+  await new Promise((r) => setTimeout(r, 300));
+  // TODO: replace with -> const { data } = await api.get(`/bookings/${bookingId}`); return data;
+  const booking = bookingsStore.get(bookingId);
+  if (!booking) throw new Error("Booking not found.");
+  return booking;
+}
+
+export async function confirmPayment(bookingId, paymentMethod) {
+  await new Promise((r) => setTimeout(r, 1200)); // simulate gateway latency
+  // TODO: replace with -> const { data } = await api.post(`/bookings/${bookingId}/pay`, { paymentMethod }); return data;
+  const booking = bookingsStore.get(bookingId);
+  if (!booking) throw new Error("Booking not found.");
+
+  booking.status = "CONFIRMED";
+  booking.paymentMethod = paymentMethod;
+  booking.paidAt = new Date().toISOString();
+  bookingsStore.set(bookingId, booking);
+  return booking;
 }
