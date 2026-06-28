@@ -1,10 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { auth } from "../services/auth";
-import LiveStatus from "../pages/LiveStatus";
-// ...
-<Route path="/live-status" element={
-  <MainLayout><LiveStatus /></MainLayout>
-} />
 
 import MainLayout       from "../layouts/MainLayout";
 import Home             from "../pages/Home";
@@ -21,6 +16,7 @@ import TrainDetails     from "../pages/TrainDetails";
 import Contact          from "../pages/Contact";
 import Support          from "../pages/Support";
 import PNRStatus        from "../pages/PNRStatus";
+import LiveStatus       from "../pages/LiveStatus";
 import NotFound         from "../pages/NotFound";
 
 function ProtectedRoute({ children }) {
@@ -29,17 +25,12 @@ function ProtectedRoute({ children }) {
     : <Navigate to="/login" replace />;
 }
 
-// Home already has Navbar+Footer built in — don't wrap it
-// LoginRegister is full-screen — no layout
-// Everything else gets MainLayout
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Standalone — manage their own layout */}
       <Route path="/"     element={<Home />} />
       <Route path="/login" element={<LoginRegister />} />
 
-      {/* Public pages with Navbar + Footer */}
       <Route path="/results" element={
         <MainLayout><Results /></MainLayout>
       } />
@@ -55,8 +46,10 @@ export default function AppRoutes() {
       <Route path="/pnr-status" element={
         <MainLayout><PNRStatus /></MainLayout>
       } />
+      <Route path="/live-status" element={
+        <MainLayout><LiveStatus /></MainLayout>
+      } />
 
-      {/* Protected pages with Navbar + Footer */}
       <Route path="/bookings" element={
         <ProtectedRoute><MainLayout><Bookings /></MainLayout></ProtectedRoute>
       } />
@@ -79,7 +72,6 @@ export default function AppRoutes() {
         <ProtectedRoute><MainLayout><Notifications /></MainLayout></ProtectedRoute>
       } />
 
-      {/* 404 */}
       <Route path="*" element={
         <MainLayout><NotFound /></MainLayout>
       } />
