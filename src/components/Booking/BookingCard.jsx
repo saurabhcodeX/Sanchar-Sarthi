@@ -21,16 +21,20 @@ const QUOTAS = [
   { code: "PREMIUM_TATKAL", label: "PREMIUM TATKAL" },
 ];
 
-function today() {
-  const d = new Date();
-  return d.toLocaleDateString("en-GB").split("/").join("/");
+function todayISO() {
+  return new Date().toISOString().split("T")[0]; // YYYY-MM-DD, required by <input type="date">
+}
+
+function formatDisplayDate(isoStr) {
+  const [y, m, d] = isoStr.split("-");
+  return `${d}/${m}/${y}`; // DD/MM/YYYY for Results page
 }
 
 export default function BookingCard() {
   const navigate = useNavigate();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [date, setDate] = useState(today());
+  const [isoDate, setIsoDate] = useState(todayISO());
   const [travelClass, setTravelClass] = useState("ALL");
   const [quota, setQuota] = useState("GENERAL");
   const [showClassMenu, setShowClassMenu] = useState(false);
@@ -54,7 +58,13 @@ export default function BookingCard() {
       alert("Please fill in origin and destination.");
       return;
     }
-    const params = new URLSearchParams({ from, to, date, class: travelClass, quota });
+    const params = new URLSearchParams({
+      from,
+      to,
+      date: formatDisplayDate(isoDate),
+      class: travelClass,
+      quota,
+    });
     navigate(`/results?${params.toString()}`);
   };
 
@@ -161,15 +171,15 @@ export default function BookingCard() {
           {/* Date / Class */}
           <div className="flex gap-3 mb-4">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-[#0A1A4F] mb-1">DD/MM/YYYY *</label>
+              <label className="block text-xs font-semibold text-[#0A1A4F] mb-1">Journey Date *</label>
               <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-orange-500">
-                <Calendar size={15} className="text-gray-400 shrink-0" />
+                <Calendar size={15} className="text-gray-400 shrink-0 pointer-events-none" />
                 <input
-                  type="text"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  placeholder="DD/MM/YYYY"
-                  className="w-full outline-none text-sm text-gray-800"
+                  type="date"
+                  value={isoDate}
+                  min={todayISO()}
+                  onChange={(e) => setIsoDate(e.target.value)}
+                  className="w-full outline-none text-sm text-gray-800 bg-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
               </div>
             </div>
