@@ -1,21 +1,28 @@
-import { trains } from "../data/trains";
+import { generateTrainsForRoute } from "../data/trains";
+
+const trainCache = new Map(); // avoid regenerating on every call for the same route
 
 export async function searchTrains({ from, to }) {
   await new Promise((r) => setTimeout(r, 500)); // simulate network
+
   // TODO: replace with -> const { data } = await api.get('/trains/search', { params: { from, to } });
 
-  if (!from || !to) return trains; // fallback: show all if no params
+  if (!from || !to) return [];
 
-  const results = trains.filter(
-    (t) => t.from.toLowerCase() === from.toLowerCase() && t.to.toLowerCase() === to.toLowerCase()
-  );
-  return results;
+  const key = `${from.toLowerCase()}-${to.toLowerCase()}`;
+  if (!trainCache.has(key)) {
+    trainCache.set(key, generateTrainsForRoute(from, to));
+  }
+  return trainCache.get(key);
 }
 
 export async function getTrainById(id) {
   await new Promise((r) => setTimeout(r, 200));
   // TODO: replace with -> const { data } = await api.get(`/trains/${id}`);
-  const train = trains.find((t) => String(t.id) === String(id));
-  if (!train) throw new Error("Train not found");
-  return train;
+
+  for (const trains of trainCache.values()) {
+    const found = trains.find((t) => t.id === id);
+    if (found) return found;
+  }
+  throw new Error("Train not found. Please search again.");
 }
