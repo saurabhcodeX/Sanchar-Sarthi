@@ -1,20 +1,16 @@
-import Navbar from "../components/Navbar/Navbar";
-import Hero from "../components/Hero/Hero";
+import { useState } from "react";
+import SearchTabs from "../components/Common/SearchTabs";
 import BookingCard from "../components/Booking/BookingCard";
-import PopularRoutes from "../components/PopularRoutes/PopularRoutes";
-import WhyChooseUs from "../components/WhyChooseUs/WhyChooseUs";
-import Footer from "../components/Footer/Footer";
+import FlightBookingCard from "../components/Booking/FlightBookingCard";
+import HotelBookingCard from "../components/Booking/HotelBookingCard";
 
-export default function Home() {
-  return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Navbar />
-      <Hero />
-      <BookingCard />
-      <div className="mt-4" />
-      <PopularRoutes />
-      <WhyChooseUs />
-      <Footer />
-    </div>
-  );
-}
+// Inside your Hero/Home component, replace <BookingCard /> with:
+const [activeTab, setActiveTab] = useState("trains");
+
+// In JSX:
+<div>
+  <SearchTabs active={activeTab} onChange={setActiveTab} />
+  {activeTab === "trains" && <BookingCard />}
+  {activeTab === "flights" && <FlightBookingCard />}
+  {activeTab === "hotels" && <HotelBookingCard />}
+</div>

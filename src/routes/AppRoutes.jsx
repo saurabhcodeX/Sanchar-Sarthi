@@ -17,6 +17,8 @@ import Contact          from "../pages/Contact";
 import Support          from "../pages/Support";
 import PNRStatus        from "../pages/PNRStatus";
 import LiveStatus       from "../pages/LiveStatus";
+import FlightResults    from "../pages/FlightResults";
+import HotelResults     from "../pages/HotelResults";
 import NotFound         from "../pages/NotFound";
 
 function ProtectedRoute({ children }) {
@@ -28,7 +30,7 @@ function ProtectedRoute({ children }) {
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/"     element={<Home />} />
+      <Route path="/"      element={<Home />} />
       <Route path="/login" element={<LoginRegister />} />
 
       <Route path="/results" element={
@@ -48,6 +50,12 @@ export default function AppRoutes() {
       } />
       <Route path="/live-status" element={
         <MainLayout><LiveStatus /></MainLayout>
+      } />
+      <Route path="/flights" element={
+        <MainLayout><FlightResults /></MainLayout>
+      } />
+      <Route path="/hotels" element={
+        <MainLayout><HotelResults /></MainLayout>
       } />
 
       <Route path="/bookings" element={
