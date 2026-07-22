@@ -69,8 +69,13 @@ export default function BookingCard() {
   };
 
   return (
-    <section className="relative -mt-16 z-20 px-4 md:px-0 max-w-2xl mx-auto">
-      <motion.div
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      viewport={{ once: true }}
+      className="rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-[#0A1A4F]/10"
+    >
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
