@@ -17,12 +17,23 @@ export default function Home() {
       <Navbar />
       <Hero />
 
-      <div className="relative -mt-16 z-20 px-4 md:px-0 max-w-2xl mx-auto w-full">
+      {/* Tab switcher — sits just above the booking card */}
+      <div className="relative -mt-24 z-30 flex justify-center px-4">
         <SearchTabs active={activeTab} onChange={setActiveTab} />
-        {activeTab === "trains"  && <BookingCard />}
-        {activeTab === "flights" && <FlightBookingCard />}
-        {activeTab === "hotels"  && <HotelBookingCard />}
       </div>
+
+      {/* Booking cards — each manages its own layout */}
+      {activeTab === "trains"  && <BookingCard />}
+      {activeTab === "flights" && (
+        <div className="relative -mt-4 z-20 px-4 md:px-0 max-w-2xl mx-auto w-full">
+          <FlightBookingCard />
+        </div>
+      )}
+      {activeTab === "hotels" && (
+        <div className="relative -mt-4 z-20 px-4 md:px-0 max-w-2xl mx-auto w-full">
+          <HotelBookingCard />
+        </div>
+      )}
 
       <div className="mt-16" />
       <PopularRoutes />
