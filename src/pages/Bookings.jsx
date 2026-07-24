@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Navigation, MapPin, ArrowLeftRight, Calendar, Briefcase, Grid2x2, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { searchStations } from "../../data/stations";
-
+import { searchStations } from "../data/stations";
 const CLASSES = [
   { code: "ALL", label: "All Classes" },
   { code: "SL", label: "Sleeper" },
