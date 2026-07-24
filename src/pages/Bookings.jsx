@@ -1,114 +1,203 @@
 import { useState } from "react";
+import { Navigation, MapPin, ArrowLeftRight, Calendar, Briefcase, Grid2x2, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Train, Clock, ArrowRight, Download, Eye, Search, Filter } from "lucide-react";
-import { motion } from "framer-motion";
+import { searchStations } from "../../data/stations";
 
-const BOOKINGS = [
-  { id:"BK001", pnr:"4521876543", train:"Vande Bharat Express", number:"22436", from:"New Delhi", to:"Chandigarh", dep:"06:00", arr:"09:30", date:"27 Jun 2026", class:"3A", passengers:1, fare:980, status:"Confirmed" },
-  { id:"BK002", pnr:"7834521098", train:"Rajdhani Express",     number:"12301", from:"New Delhi", to:"Howrah",     dep:"16:55", arr:"09:55", date:"15 Jun 2026", class:"2A", passengers:2, fare:3240, status:"Completed" },
-  { id:"BK003", pnr:"9012345678", train:"Shatabdi Express",     number:"12005", from:"New Delhi", to:"Chandigarh", dep:"07:20", arr:"11:05", date:"02 Jul 2026", class:"CC", passengers:1, fare:780, status:"Confirmed" },
-  { id:"BK004", pnr:"3456789012", train:"Himalayan Queen",      number:"14095", from:"New Delhi", to:"Kalka",      dep:"05:40", arr:"10:35", date:"10 May 2026", class:"SL", passengers:3, fare:765, status:"Cancelled" },
+const CLASSES = [
+  { code: "ALL", label: "All Classes" },
+  { code: "SL", label: "Sleeper" },
+  { code: "3A", label: "3 Tier AC" },
+  { code: "2A", label: "2 Tier AC" },
+  { code: "1A", label: "First AC" },
+  { code: "CC", label: "Chair Car" },
+  { code: "EC", label: "Exec. Chair" },
 ];
 
-const STATUS_STYLES = {
-  Confirmed: "bg-green-100 text-green-700",
-  Completed: "bg-blue-100 text-blue-700",
-  Cancelled: "bg-red-100 text-red-600",
-};
+const QUOTAS = [
+  { code: "GENERAL", label: "GENERAL" },
+  { code: "LADIES", label: "LADIES" },
+  { code: "TATKAL", label: "TATKAL" },
+  { code: "PREMIUM_TATKAL", label: "PREMIUM TATKAL" },
+];
 
-export default function Bookings() {
+function todayISO() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function formatDisplayDate(isoStr) {
+  const [y, m, d] = isoStr.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+export default function BookingCard() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState("All");
-  const [search, setSearch] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [isoDate, setIsoDate] = useState(todayISO());
+  const [travelClass, setTravelClass] = useState("ALL");
+  const [quota, setQuota] = useState("GENERAL");
+  const [showClassMenu, setShowClassMenu] = useState(false);
+  const [showQuotaMenu, setShowQuotaMenu] = useState(false);
+  const [pwd, setPwd] = useState(false);
+  const [flexible, setFlexible] = useState(false);
+  const [railwayPass, setRailwayPass] = useState(false);
+  const [fromSuggestions, setFromSuggestions] = useState([]);
+  const [toSuggestions, setToSuggestions] = useState([]);
+  const [showFromList, setShowFromList] = useState(false);
+  const [showToList, setShowToList] = useState(false);
 
-  const filtered = BOOKINGS.filter(b => {
-    if (filter !== "All" && b.status !== filter) return false;
-    if (search && !b.train.toLowerCase().includes(search.toLowerCase()) && !b.pnr.includes(search)) return false;
-    return true;
-  });
+  const swapStations = () => { setFrom(to); setTo(from); };
+
+  const handleSearch = () => {
+    if (!from || !to) { alert("Please fill in origin and destination."); return; }
+    const params = new URLSearchParams({ from, to, date: formatDisplayDate(isoDate), class: travelClass, quota });
+    navigate(`/results?${params.toString()}`);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-[#0A1628] text-white px-6 py-6">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-extrabold">My Bookings</h1>
-          <p className="text-blue-300 text-sm mt-1">All your train bookings in one place</p>
-        </div>
+    <div className="rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-[#0A1A4F]/10">
+      <div className="grid grid-cols-2">
+        <button onClick={() => navigate("/pnr-status")} className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 hover:bg-[#0d2266] transition-colors">
+          <Briefcase size={16} /> PNR STATUS
+        </button>
+        <button onClick={() => navigate("/live-status")} className="bg-[#0A1A4F] text-white text-sm font-bold py-3 flex items-center justify-center gap-2 border-l border-white/10 hover:bg-[#0d2266] transition-colors">
+          <Grid2x2 size={16} /> CHARTS / VACANCY
+        </button>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        {/* Search + filter */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
-            <Search size={15} className="text-gray-400"/>
-            <input value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder="Search by train name or PNR..."
-              className="flex-1 outline-none text-sm text-gray-700 placeholder:text-gray-300"/>
+      <div className="bg-white px-6 py-6">
+        <h2 className="text-center text-2xl font-extrabold text-[#0A1A4F] tracking-wide mb-6">
+          BOOK TICKET
+        </h2>
+
+        {/* From / To */}
+        <div className="flex gap-3 mb-4">
+          <div className="flex-1 relative">
+            <label className="block text-xs font-semibold text-[#0A1A4F] mb-1">From</label>
+            <div className="flex items-center gap-2 border-2 border-[#0A1A4F] rounded-lg px-3 py-2.5 focus-within:border-orange-500">
+              <Navigation size={16} className="text-[#0A1A4F] shrink-0" />
+              <input value={from}
+                onChange={(e) => { setFrom(e.target.value); setFromSuggestions(searchStations(e.target.value)); setShowFromList(true); }}
+                onFocus={() => setShowFromList(true)}
+                onBlur={() => setTimeout(() => setShowFromList(false), 150)}
+                placeholder="Origin Station"
+                className="w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
+              />
+            </div>
+            {showFromList && fromSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 max-h-56 overflow-auto">
+                {fromSuggestions.map((s) => (
+                  <button key={s.code} onClick={() => { setFrom(`${s.name} (${s.code})`); setShowFromList(false); }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-orange-50 text-gray-700">
+                    {s.name} <span className="text-gray-400 text-xs">({s.code})</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="flex gap-2">
-            {["All","Confirmed","Completed","Cancelled"].map(f => (
-              <button key={f} onClick={()=>setFilter(f)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${filter===f?"bg-orange-500 text-white border-orange-500":"bg-white border-gray-200 text-gray-500 hover:border-orange-300"}`}>
-                {f}
-              </button>
-            ))}
+
+          <button onClick={swapStations} aria-label="Swap stations"
+            className="self-end mb-2.5 w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 flex items-center justify-center text-[#0A1A4F] transition-colors shrink-0">
+            <ArrowLeftRight size={14} />
+          </button>
+
+          <div className="flex-1 relative">
+            <label className="block text-xs font-semibold text-[#0A1A4F] mb-1 invisible md:visible">To</label>
+            <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-orange-500">
+              <MapPin size={16} className="text-gray-400 shrink-0" />
+              <input value={to}
+                onChange={(e) => { setTo(e.target.value); setToSuggestions(searchStations(e.target.value)); setShowToList(true); }}
+                onFocus={() => setShowToList(true)}
+                onBlur={() => setTimeout(() => setShowToList(false), 150)}
+                placeholder="Destination Station"
+                className="w-full outline-none text-sm text-gray-800 placeholder:text-gray-400"
+              />
+            </div>
+            {showToList && toSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 max-h-56 overflow-auto">
+                {toSuggestions.map((s) => (
+                  <button key={s.code} onClick={() => { setTo(`${s.name} (${s.code})`); setShowToList(false); }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-orange-50 text-gray-700">
+                    {s.name} <span className="text-gray-400 text-xs">({s.code})</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Cards */}
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <Train size={40} className="mx-auto mb-3 opacity-30"/>
-            <p className="font-semibold">No bookings found</p>
+        {/* Date / Class */}
+        <div className="flex gap-3 mb-4">
+          <div className="flex-1">
+            <label className="block text-xs font-semibold text-[#0A1A4F] mb-1">Journey Date *</label>
+            <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 focus-within:border-orange-500">
+              <Calendar size={15} className="text-gray-400 shrink-0 pointer-events-none" />
+              <input type="date" value={isoDate} min={todayISO()} onChange={(e) => setIsoDate(e.target.value)}
+                className="w-full outline-none text-sm text-gray-800 bg-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
+            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {filtered.map((b, i) => (
-              <motion.div key={b.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.06}}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
-                <div className="p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[b.status]}`}>{b.status}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">PNR: {b.pnr}</span>
-                      </div>
-                      <p className="font-bold text-gray-900">{b.train}</p>
-                      <p className="text-xs text-gray-400 font-mono">#{b.number} · {b.date}</p>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="text-center">
-                        <p className="font-extrabold text-gray-900">{b.dep}</p>
-                        <p className="text-xs text-gray-400">{b.from}</p>
-                      </div>
-                      <ArrowRight size={14} className="text-orange-400"/>
-                      <div className="text-center">
-                        <p className="font-extrabold text-gray-900">{b.arr}</p>
-                        <p className="text-xs text-gray-400">{b.to}</p>
-                      </div>
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-xs text-gray-400">{b.class} · {b.passengers} pax</p>
-                      <p className="font-extrabold text-orange-600">₹{b.fare.toLocaleString()}</p>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button onClick={() => navigate(`/ticket/${b.id}`, { state: { train: { name: b.train, number: b.number, dep: b.dep, arr: b.arr }, selectedClass: b.class, passengers: Array(b.passengers).fill({ name:"Passenger", age:25, gender:"Male", berth:"Lower" }), total: b.fare }})}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 hover:border-orange-400 text-xs font-semibold text-gray-600 hover:text-orange-600 transition-all">
-                        <Eye size={13}/> View
-                      </button>
-                      <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 hover:border-orange-400 text-xs font-semibold text-gray-600 hover:text-orange-600 transition-all">
-                        <Download size={13}/> Download
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+          <div className="flex-1 relative">
+            <label className="block text-xs font-semibold text-transparent mb-1">Class</label>
+            <button onClick={() => { setShowClassMenu(v => !v); setShowQuotaMenu(false); }}
+              className="w-full flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 hover:border-orange-400 transition-colors">
+              <Briefcase size={15} className="text-gray-400 shrink-0" />
+              <span className="text-sm text-gray-800 flex-1 text-left">{CLASSES.find(c => c.code === travelClass)?.label}</span>
+              <ChevronDown size={14} className={`text-gray-400 transition-transform ${showClassMenu ? "rotate-180" : ""}`} />
+            </button>
+            {showClassMenu && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 max-h-56 overflow-auto">
+                {CLASSES.map(c => (
+                  <button key={c.code} onClick={() => { setTravelClass(c.code); setShowClassMenu(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-orange-50 ${travelClass === c.code ? "text-orange-600 font-semibold" : "text-gray-700"}`}>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Quota */}
+        <div className="relative mb-5">
+          <button onClick={() => { setShowQuotaMenu(v => !v); setShowClassMenu(false); }}
+            className="w-full flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2.5 hover:border-orange-400 transition-colors">
+            <Grid2x2 size={15} className="text-gray-400 shrink-0" />
+            <span className="text-sm font-semibold text-[#0A1A4F] flex-1 text-left">{QUOTAS.find(q => q.code === quota)?.label}</span>
+            <ChevronDown size={14} className={`text-gray-400 transition-transform ${showQuotaMenu ? "rotate-180" : ""}`} />
+          </button>
+          {showQuotaMenu && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1">
+              {QUOTAS.map(q => (
+                <button key={q.code} onClick={() => { setQuota(q.code); setShowQuotaMenu(false); }}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-orange-50 ${quota === q.code ? "text-orange-600 font-semibold" : "text-gray-700"}`}>
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Checkboxes */}
+        <div className="grid grid-cols-2 gap-y-2 gap-x-4 mb-6">
+          <label className="flex items-center gap-2 text-sm font-semibold text-[#0A1A4F] cursor-pointer">
+            <input type="checkbox" checked={pwd} onChange={(e) => setPwd(e.target.checked)} className="w-4 h-4 accent-[#0A1A4F] rounded" />
+            Person With Disability Concession
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-[#0A1A4F] cursor-pointer">
+            <input type="checkbox" checked={flexible} onChange={(e) => setFlexible(e.target.checked)} className="w-4 h-4 accent-[#0A1A4F] rounded" />
+            Flexible With Date
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-[#0A1A4F] cursor-pointer">
+            <input type="checkbox" checked={railwayPass} onChange={(e) => setRailwayPass(e.target.checked)} className="w-4 h-4 accent-[#0A1A4F] rounded" />
+            Railway Pass Concession
+          </label>
+        </div>
+
+        <button onClick={handleSearch}
+          className="w-full bg-orange-500 hover:bg-orange-600 active:scale-[0.99] transition-all text-white font-bold text-sm py-3.5 rounded-full shadow-lg shadow-orange-500/30">
+          Search Trains
+        </button>
       </div>
     </div>
   );

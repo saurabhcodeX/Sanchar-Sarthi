@@ -311,7 +311,7 @@ function HotelForm() {
   const [city, setCity] = useState("");
   const [checkIn, setCheckIn] = useState(todayISO());
   const [checkOut, setCheckOut] = useState(tomorrowISO());
-  const [rooms, setRooms] = useState(1);
+  const  [rooms, setRooms] = useState(1);
   const [guests, setGuests] = useState(1);
   const [showRooms, setShowRooms] = useState(false);
 
