@@ -1,6 +1,21 @@
 import { Link } from "react-router-dom";
-import { Train, Plane, Hotel, Bus, MapPin, Phone, Mail, Instagram, Twitter, Facebook, Youtube, ArrowRight } from "lucide-react";
+import {
+  Train,
+  Plane,
+  Hotel,
+  Bus,
+  MapPin,
+  Phone,
+  Mail,
+  ArrowRight,
+} from "lucide-react";
 
+import {
+  FaInstagram,
+  FaTwitter,
+  FaFacebookF,
+  FaYoutube,
+} from "react-icons/fa";
 const FOOTER_LINKS = {
   "Travel": [
     { label: "Train Booking", to: "/" },
@@ -29,12 +44,11 @@ const FOOTER_LINKS = {
 };
 
 const SOCIAL = [
-  { icon: Instagram, label: "Instagram", href: "#" },
-  { icon: Twitter,   label: "Twitter",   href: "#" },
-  { icon: Facebook,  label: "Facebook",  href: "#" },
-  { icon: Youtube,   label: "YouTube",   href: "#" },
+  { icon: FaInstagram, label: "Instagram", href: "#" },
+  { icon: FaTwitter, label: "Twitter", href: "#" },
+  { icon: FaFacebookF, label: "Facebook", href: "#" },
+  { icon: FaYoutube, label: "YouTube", href: "#" },
 ];
-
 const SERVICES = [
   { icon: Train,  label: "Trains"  },
   { icon: Plane,  label: "Flights" },
