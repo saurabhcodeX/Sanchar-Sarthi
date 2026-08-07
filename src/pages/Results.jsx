@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Clock, ArrowRight, Filter, Zap, ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTrainSearch } from "../hooks/useTrainSearch";
+import SmartAssist from "../components/SmartAssist/SmartAssist";
 
 function ClassPill({ cls, price, seats, selected, onClick }) {
   const available = seats > 0;
