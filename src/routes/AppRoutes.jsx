@@ -19,6 +19,7 @@ import PNRStatus        from "../pages/PNRStatus";
 import LiveStatus       from "../pages/LiveStatus";
 import FlightResults    from "../pages/FlightResults";
 import HotelResults     from "../pages/HotelResults";
+import Architecture     from "../pages/Architecture";
 import NotFound         from "../pages/NotFound";
 
 function ProtectedRoute({ children }) {
@@ -30,13 +31,9 @@ function ProtectedRoute({ children }) {
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Home — manages its own Navbar + Footer */}
-      <Route path="/" element={<Home />} />
+      <Route path="/"            element={<Home />} />
+      <Route path="/login"       element={<LoginRegister />} />
 
-      {/* Login — full screen, no layout */}
-      <Route path="/login" element={<LoginRegister />} />
-
-      {/* Public pages */}
       <Route path="/results"        element={<MainLayout><Results /></MainLayout>} />
       <Route path="/train/:trainId" element={<MainLayout><TrainDetails /></MainLayout>} />
       <Route path="/contact"        element={<MainLayout><Contact /></MainLayout>} />
@@ -45,8 +42,8 @@ export default function AppRoutes() {
       <Route path="/live-status"    element={<MainLayout><LiveStatus /></MainLayout>} />
       <Route path="/flights"        element={<MainLayout><FlightResults /></MainLayout>} />
       <Route path="/hotels"         element={<MainLayout><HotelResults /></MainLayout>} />
+      <Route path="/architecture"   element={<MainLayout><Architecture /></MainLayout>} />
 
-      {/* Protected pages */}
       <Route path="/bookings"      element={<ProtectedRoute><MainLayout><Bookings /></MainLayout></ProtectedRoute>} />
       <Route path="/passengers"    element={<ProtectedRoute><MainLayout><PassengerDetails /></MainLayout></ProtectedRoute>} />
       <Route path="/payment"       element={<ProtectedRoute><MainLayout><Payment /></MainLayout></ProtectedRoute>} />
@@ -55,7 +52,6 @@ export default function AppRoutes() {
       <Route path="/wallet"        element={<ProtectedRoute><MainLayout><Wallet /></MainLayout></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><MainLayout><Notifications /></MainLayout></ProtectedRoute>} />
 
-      {/* 404 */}
       <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
     </Routes>
   );
